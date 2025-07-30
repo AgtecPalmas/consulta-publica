@@ -1,14 +1,24 @@
 # .github/workflows/mirror-to-gitlab.yml
 name: Mirror to GitLab
 on: [push]
+
 jobs:
-  mirror:
+  push_to_gitlab:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Push to GitLab
+      - name: Checkout full repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0       # <-- aqui
+
+      - name: Configure GitLab remote
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
         run: |
+          git remote remove origin
           git remote add gitlab https://oauth2:${GITLAB_TOKEN}@painel.git2.palmas.to.gov.br/prestadores-servicos/consulta-publica.git
-          git push gitlab --mirror
+
+      - name: Push all branches & tags
+        run: |
+          git push gitlab --all
+          git push gitlab --tags
