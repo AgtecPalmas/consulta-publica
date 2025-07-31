@@ -37,6 +37,7 @@ Rails.application.configure do
   # Allow accessing the application through a domain so subdomains can be used
   config.hosts << "lvh.me"
   config.hosts << /.*\.lvh\.me/
+  config.hosts << "participe.palmas.to.gov.br"
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false

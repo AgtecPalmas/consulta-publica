@@ -2,10 +2,10 @@
 .git
 .gitignore
 # Confidential information
-config/database.yml
-config/secrets.yml
-config/deploy-secrets.yml
-config/maintenance.yml
+# config/database.yml
+# config/secrets.yml
+# config/deploy-secrets.yml
+# config/maintenance.yml
 # Logfiles and tempfiles.
 **/log/*
 !**/log/.keep

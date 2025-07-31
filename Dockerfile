@@ -31,9 +31,6 @@ RUN chmod 0440 /etc/sudoers.d/secure_path
 # Define where our application will live inside the image
 ENV RAILS_ROOT=/var/www/consul
 
-# Create application home. App server will need the pids dir so just create everything in one shot
-RUN mkdir -p $RAILS_ROOT/tmp/pids
-
 # Set our working directory inside the image
 WORKDIR $RAILS_ROOT
 
@@ -41,8 +38,8 @@ WORKDIR $RAILS_ROOT
 COPY .node-version ./
 ENV PATH=/usr/local/node/bin:$PATH
 RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz -C /tmp/ && \
-    /tmp/node-build-master/bin/node-build `cat .node-version` /usr/local/node && \
-    rm -rf /tmp/node-build-master
+  /tmp/node-build-master/bin/node-build `cat .node-version` /usr/local/node && \
+  rm -rf /tmp/node-build-master
 
 # Use the Gemfiles as Docker cache markers. Always bundle before copying app src.
 # (the src likely changed and we don't want to invalidate Docker's cache too early)
@@ -55,6 +52,14 @@ RUN npm install
 
 # Copy the Rails application into place
 COPY . .
+
+# Create application home. App server will need the pids dir so just create everything in one shot
+RUN mkdir -p $RAILS_ROOT/tmp/pids $RAILS_ROOT/tmp/sockets $RAILS_ROOT/tmp/cache log \
+  && touch log/development.log log/production.log log/delayed_job.log \
+  && chown -R consul:consul log tmp \
+  && chmod 0664 /var/www/consul/log/development.log \
+  && chmod 0664 /var/www/consul/log/production.log \
+  && chmod 0664 /var/www/consul/log/delayed_job.log
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 # Define the script we want run once the container boots
