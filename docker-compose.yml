@@ -1,72 +1,35 @@
 services:
-  # service configuration for our database
-  # database:
-
-  #   # use the preferred version of the official Postgres image
-  #   # see https://hub.docker.com/_/postgres/
-  #   image: postgres:13.16
-  #   environment:
-  #     - POSTGRES_USER=${POSTGRES_USER}
-  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-  #   # persist the database between containers by storing it in a volume
-  #   volumes:
-  #     - db_data:/var/lib/postgresql/data
-
-  # # service configuration for our dockerized Rails app
   app:
-
-    # pull image from the GitLab registry
     image: painel.git2.palmas.to.gov.br:5050/prestadores-servicos/consulta-publica:latest
     pull_policy: always
     restart: unless-stopped
     hostname: participe.palmas.to.gov.br
-    # use the Dockerfile next to this file
     build:
       context: .
       dockerfile: Dockerfile
-    # rely on the RAILS_ENV value of the host machine
-    # environment:
-    #RAILS_ENV: $RAILS_ENV
-    # makes the app container aware of the DB container
-    # depends_on:
-    #   - database
-    # expose the port we configured Unicorn to bind to
-    # ports:
-    #   - "3000:3000"
     expose:
       - 3000
-    # map our application source code, in full, to the application root of our container
     volumes:
-      #- .:/var/www/consul
       - bundle:/usr/local/bundle
       - node_modules:/var/www/consul/node_modules
       - storage:/var/www/consul/storage
-    # networks
     networks:
       - default
       - proxy
-    # environment variables
     environment:
-      - DB_HOST=${DB_HOST} # Same name as the database service
+      - DB_HOST=${DB_HOST}
       - PG_USER=${POSTGRES_USER}
       - PG_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - SECRET_KEY=${SECRET_KEY}
     labels:
-      # 1) Habilita Traefik para este container
       - "traefik.enable=true"
-      ### Roteador HTTP (insecure) ###
       - "traefik.http.routers.consulta-publica-http.rule=Host(`participe.palmas.to.gov.br`)"
       - "traefik.http.routers.consulta-publica-http.entrypoints=web"
-      # (opcional) redireciona HTTP → HTTPS
-      #- "traefik.http.routers.consulta-publica-http.middlewares=redirect-to-https"
-      #- "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      ### Roteador HTTPS (secure) ###
       - "traefik.http.routers.consulta-publica-https.rule=Host(`participe.palmas.to.gov.br`)"
       - "traefik.http.routers.consulta-publica-https.entrypoints=websecure"
       - "traefik.http.routers.consulta-publica-https.tls=true"
       - "traefik.http.routers.consulta-publica-https.tls.certresolver=letsencrypt"
-      ### Serviço load‑balancer (mapeia para a porta 3000 do container) ###
       - "traefik.http.services.consulta-publica.loadbalancer.server.port=3000"
 networks:
   default:
